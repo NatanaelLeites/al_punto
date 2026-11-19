@@ -2,7 +2,6 @@ import { db, auth } from "./firebase-config.js";
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Estructura por defecto por si Firestore está vacío
 let currentData = {
   unitPrice: 360,
   promoPrice: 320,
@@ -52,24 +51,58 @@ async function loadAdminData() {
   try {
     const docRef = doc(db, "config", "storeData");
     const snap = await getDoc(docRef);
-    
+
     if (snap.exists()) {
       currentData = snap.data();
-      // Asegurar que existan las propiedades si el documento viejo era incompleto
       if (!currentData.menu) currentData.menu = {};
       if (!currentData.gallery) currentData.gallery = [];
     } else {
-      // Si no existe, lo creamos de una vez en Firestore con los datos por defecto
       await setDoc(docRef, currentData);
     }
 
     document.getElementById("cfg-unit-price").value = currentData.unitPrice || 360;
     document.getElementById("cfg-promo-price").value = currentData.promoPrice || 320;
     document.getElementById("cfg-whatsapp").value = currentData.whatsappNumber || "";
+
+    renderAdminGallery();
     populateMenuEditor();
   } catch (err) {
     console.error("Error al cargar datos de admin:", err);
   }
+}
+
+// Renderizar galería con opción de eliminar cada foto
+function renderAdminGallery() {
+  const listEl = document.getElementById("admin-gallery-list");
+  if (!currentData.gallery || currentData.gallery.length === 0) {
+    listEl.innerHTML = `<p class="empty-gallery-msg">No hay fotos cargadas todavía.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = currentData.gallery.map((item, index) => `
+    <div class="admin-gallery-item">
+      <div class="admin-gallery-info">
+        <img src="${item.url}" alt="${item.title}" class="admin-gallery-thumb" />
+        <span class="admin-gallery-title">${item.title}</span>
+      </div>
+      <button type="button" class="btn-delete-photo" data-index="${index}">Eliminar</button>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll(".btn-delete-photo").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const idx = Number(btn.dataset.index);
+      const item = currentData.gallery[idx];
+      if (!item) return;
+
+      const confirmed = confirm(`¿Eliminar la foto "${item.title}" de la web?`);
+      if (!confirmed) return;
+
+      currentData.gallery.splice(idx, 1);
+      await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+      renderAdminGallery();
+    });
+  });
 }
 
 // Guardar Configuración y Precios
@@ -85,7 +118,7 @@ document.getElementById("config-form").addEventListener("submit", async (e) => {
   alert("¡Precios y configuración actualizados con éxito!");
 });
 
-// Procesar imagen y guardarla como Base64 comprimida en Firestore
+// Procesar imagen y guardarla comprimida en Firestore
 document.getElementById("upload-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!currentData) return;
@@ -102,8 +135,8 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
     img.onload = async function() {
       const canvas = document.createElement("canvas");
       const MAX_WIDTH = 800;
-      const scaleSize = MAX_WIDTH / img.width;
-      canvas.width = MAX_WIDTH;
+      const scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+      canvas.width = img.width * scaleSize;
       canvas.height = img.height * scaleSize;
 
       const ctx = canvas.getContext("2d");
@@ -115,6 +148,7 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
       currentData.gallery.push({ url: compressedDataUrl, title });
 
       await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+      renderAdminGallery();
       alert("¡Foto subida y guardada con éxito en la base de datos!");
       fileInput.value = "";
       document.getElementById("image-title").value = "";
@@ -141,10 +175,24 @@ document.getElementById("save-menu-btn").addEventListener("click", async () => {
   if (!currentData) return;
   const day = selectDay.value;
   const lines = textareaDishes.value.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-  
+
   if (!currentData.menu) currentData.menu = {};
   currentData.menu[day] = lines;
 
   await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
   alert(`¡Menú del día ${day} actualizado con éxito!`);
+});
+
+document.getElementById("clear-day-btn").addEventListener("click", async () => {
+  if (!currentData) return;
+  const day = selectDay.value;
+  const confirmed = confirm(`¿Seguro que querés borrar todos los platos del ${day}?`);
+  if (!confirmed) return;
+
+  if (!currentData.menu) currentData.menu = {};
+  currentData.menu[day] = [];
+  textareaDishes.value = "";
+
+  await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+  alert(`Se vació el menú del día ${day}.`);
 });

@@ -14,7 +14,7 @@
   <!-- TOP BAR -->
   <header class="header">
     <div class="container header-inner">
-      <a href="#" class="brand">
+      <a href="./index.html" class="brand">
         <img src="assets/logo.png" alt="Al Punto Logo" class="brand-logo" />
         <div class="brand-text">
           <span class="brand-name">AL PUNTO</span>
@@ -30,24 +30,15 @@
 
   <!-- HERO COMPACTO MOBILE FIRST -->
   <section class="hero">
-    <div class="container">
-      <span class="pill-tag">🛵 Envío incluido en Montevideo</span>
-      <h1>Comida casera, fresca y <span>al punto</span>.</h1>
-      <p>Elegí tus viandas de la semana, armá tu pedido y recibilo directo en tu puerta.</p>
-      
-      <!-- TARJETAS DE TARIFAS -->
-      <div class="pricing-grid">
-        <div class="price-box">
-          <span class="price-label">Vianda Individual</span>
-          <div class="price-amount">$<span id="display-unit-price">360</span></div>
-          <small>c/u con envío incluido</small>
-        </div>
-        <div class="price-box promo">
-          <span class="promo-badge">PROMO SEMANAL</span>
-          <span class="price-label">Pack 5+ Viandas</span>
-          <div class="price-amount">$<span id="display-promo-price">320</span></div>
-          <small>c/u llevando 5 o más</small>
-        </div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="pill-tag">🛵 Envío incluido en Montevideo</span>
+        <h1>El sabor de lo casero, <span>todos los días</span>.</h1>
+        <p>Comidas frescas, elaboradas con dedicación y ese toque casero que tanto nos gusta.</p>
+        <p class="hero-sub">Elegí tu menú semanal y recibí tus viandas en la puerta de tu casa.</p>
+      </div>
+      <div class="hero-dish">
+        <img src="assets/pollo-encabezado.png" alt="Pollo grillado con ensalada y papas al horno" class="hero-dish-img" />
       </div>
     </div>
   </section>
@@ -67,7 +58,7 @@
     <div class="container">
       <div class="menu-header">
         <h2 class="section-title">Menú de la Semana</h2>
-        <p id="schedule-info" class="schedule-text">Pedidos hasta las 20:00 hs del día anterior.</p>
+        <p id="schedule-info" class="schedule-text">Pedidos el día anterior o hasta las 09:00 hs del mismo día (sujeto a disponibilidad).</p>
       </div>
 
       <div class="days-tabs" id="days-tabs" role="tablist">
@@ -84,11 +75,76 @@
     </div>
   </main>
 
+  <!-- PRECIOS Y PROMOS (DEBAJO DEL MENÚ SEMANAL) -->
+  <section id="precios" class="pricing-section">
+    <div class="container">
+      <h2 class="section-title">Precios</h2>
+      <div class="pricing-grid">
+        <div class="price-box">
+          <span class="price-label">Vianda Individual</span>
+          <div class="price-amount">$<span id="display-unit-price">360</span></div>
+          <small>c/u con envío incluido</small>
+        </div>
+        <div class="price-box promo">
+          <span class="promo-badge">PROMO SEMANAL</span>
+          <span class="price-label">Pack 5+ Viandas</span>
+          <div class="price-amount">$<span id="display-promo-price">320</span></div>
+          <small>c/u llevando 5 o más</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ZONA DE ENTREGAS Y HORARIOS -->
   <section class="info-section">
     <div class="container info-card">
       <h3>📍 Zonas de Entrega y Horarios</h3>
-      <p id="delivery-zones">Entregas en todo Montevideo de Lunes a Viernes de 11:00 a 14:00 hs.</p>
+      <p id="delivery-zones">Entregas en Montevideo de Lunes a Viernes de 10:30 a 14:00 hs.</p>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS FRECUENTES -->
+  <section id="faq" class="faq-section">
+    <div class="container">
+      <h2 class="section-title">Preguntas Frecuentes</h2>
+      <div class="faq-list">
+        <details class="faq-item">
+          <summary>¿Qué tipo de viandas ofrecen?</summary>
+          <p>Ofrecemos comidas caseras, equilibradas y elaboradas con ingredientes seleccionados, pensadas para facilitar una alimentación saludable durante la semana.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cómo hago mi pedido?</summary>
+          <p>Podés realizar tu pedido directamente por WhatsApp, desde el botón disponible en nuestra página web.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Hacen entregas a domicilio?</summary>
+          <p>Sí, realizamos entregas en Montevideo. En horario de 10:30 hs a 14:00 hs.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Qué días realizan entregas?</summary>
+          <p>Las entregas se realizan de lunes a viernes dentro del horario establecido.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Con cuánto tiempo de anticipación tengo que pedir?</summary>
+          <p>Lo ideal es realizar tu pedido el día anterior para asegurar la entrega. También aceptamos pedidos hasta las 09:00 del mismo día, sujetos a disponibilidad y al cronograma de entregas confirmado el día anterior.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Puedo hacer un pedido para varios días?</summary>
+          <p>Sí. Podés realizar pedidos para organizar tus comidas de varios días y consultar por las opciones disponibles.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cómo puedo pagar?</summary>
+          <p>Podés pagar por intermedio de transferencia o Mercado Pago.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Pueden preparar menús personalizados?</summary>
+          <p>Sí, escribinos al WhatsApp y te contamos.</p>
+        </details>
+        <details class="faq-item">
+          <summary>¿Por qué elegir nuestras viandas?</summary>
+          <p>Porque buscamos ofrecer una solución práctica para comer rico y equilibrado, sin tener que dedicar tiempo todos los días a cocinar.</p>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -133,6 +189,13 @@
       <div class="form-group">
         <label for="customer-notes">Aclaraciones</label>
         <input type="text" id="customer-notes" placeholder="Ej: Sin sal, timbre no anda..." />
+      </div>
+      <div class="form-group">
+        <label for="payment-method">Forma de pago</label>
+        <select id="payment-method" class="form-select">
+          <option value="Transferencia bancaria">Transferencia bancaria</option>
+          <option value="Mercado Pago">Mercado Pago</option>
+        </select>
       </div>
 
       <div class="totals-row">

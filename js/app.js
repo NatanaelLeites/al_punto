@@ -7,8 +7,8 @@ let appData = {
   unitPrice: 360,
   promoPrice: 320,
   promoMinQty: 5,
-  scheduleText: "Pedidos hasta las 20:00 hs del día anterior.",
-  deliveryZones: "Entregas en todo Montevideo de Lunes a Viernes de 11:00 a 14:00 hs.",
+  scheduleText: "Pedidos el día anterior o hasta las 09:00 hs del mismo día (sujeto a disponibilidad).",
+  deliveryZones: "Entregas en Montevideo de Lunes a Viernes de 10:30 a 14:00 hs.",
   gallery: [
     { url: "assets/canelones.jpg", title: "Canelones gratinados" },
     { url: "assets/pollo.jpg", title: "Pollo grillado con papas" },
@@ -90,7 +90,7 @@ function renderMenu(day) {
   const dishes = appData.menu[day] || [];
   const menuList = document.getElementById("menu-list");
 
-  menuList.innerHTML = dishes.map((dish, idx) => `
+  menuList.innerHTML = dishes.map((dish) => `
     <div class="dish-card">
       <div class="dish-info">
         <span class="dish-day-tag">${day}</span>
@@ -100,7 +100,6 @@ function renderMenu(day) {
     </div>
   `).join("");
 
-  // Eventos de botones agregar
   menuList.querySelectorAll(".btn-add").forEach(btn => {
     btn.addEventListener("click", () => {
       addToCart(btn.dataset.day, btn.dataset.name);
@@ -135,7 +134,6 @@ function updateCartUI() {
   const currentUnitPrice = isPromo ? appData.promoPrice : appData.unitPrice;
   const totalAmount = totalQty * currentUnitPrice;
 
-  // Badges y barra flotante
   document.getElementById("cart-count").textContent = totalQty;
   const stickyBar = document.getElementById("sticky-cart-bar");
   if (totalQty > 0) {
@@ -146,7 +144,6 @@ function updateCartUI() {
     stickyBar.classList.add("hidden");
   }
 
-  // Banner de promo dentro del carrito
   const promoBanner = document.getElementById("promo-progress");
   if (totalQty === 0) {
     promoBanner.textContent = `Llevando ${appData.promoMinQty} viandas pagás $${appData.promoPrice} c/u.`;
@@ -157,7 +154,6 @@ function updateCartUI() {
     promoBanner.textContent = `🎉 ¡Promo activada! Pagás $${appData.promoPrice} por cada vianda.`;
   }
 
-  // Lista de items en el drawer
   const cartItemsEl = document.getElementById("cart-items");
   if (cart.length === 0) {
     cartItemsEl.innerHTML = `<p style="text-align:center;color:#6b7280;margin-top:20px;">Tu carrito está vacío.</p>`;
@@ -197,6 +193,7 @@ function sendWhatsAppOrder() {
 
   const address = document.getElementById("customer-address").value.trim();
   const notes = document.getElementById("customer-notes").value.trim();
+  const paymentMethod = document.getElementById("payment-method").value;
 
   let message = `Hola *Al Punto*! Quiero hacer el siguiente pedido:\n\n`;
   cart.forEach(item => {
@@ -206,6 +203,7 @@ function sendWhatsAppOrder() {
   message += `\n*Cantidad total:* ${totalQty} viandas`;
   message += `\n*Tarifa aplicada:* $${currentUnitPrice} c/u ${isPromo ? "(Promo Semanal)" : ""}`;
   message += `\n*Total estimado:* $${totalAmount}`;
+  message += `\n💳 *Forma de pago:* ${paymentMethod}`;
 
   if (address) message += `\n\n📍 *Dirección:* ${address}`;
   else message += `\n\n📍 *Dirección:* (Escribo mi dirección acá)`;

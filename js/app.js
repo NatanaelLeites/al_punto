@@ -191,11 +191,15 @@ function sendWhatsAppOrder() {
   const currentUnitPrice = isPromo ? appData.promoPrice : appData.unitPrice;
   const totalAmount = totalQty * currentUnitPrice;
 
+  const customerName = document.getElementById("customer-name").value.trim();
   const address = document.getElementById("customer-address").value.trim();
   const notes = document.getElementById("customer-notes").value.trim();
   const paymentMethod = document.getElementById("payment-method").value;
 
-  let message = `Hola *Al Punto*! Quiero hacer el siguiente pedido:\n\n`;
+  let message = `Hola *Al Punto*!`;
+  if (customerName) message += ` Soy *${customerName}*.`;
+  message += ` Quiero hacer el siguiente pedido:\n\n`;
+
   cart.forEach(item => {
     message += `• ${item.qty}x ${item.name} _(${item.day})_\n`;
   });

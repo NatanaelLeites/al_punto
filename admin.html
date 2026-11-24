@@ -15,7 +15,7 @@
   <div id="login-container" class="admin-container">
     <div class="admin-card">
       <h2>🔑 Acceso Administración</h2>
-      <p>Ingresá con tu cuenta para gestionar el menú y los precios.</p>
+      <p>Ingresá con tu cuenta para gestionar el menú, pedidos y clientes.</p>
       <form id="login-form">
         <div class="form-group">
           <label for="login-email">Correo electrónico</label>
@@ -45,71 +45,150 @@
     </header>
 
     <main class="container dash-content">
-      <!-- 1. CONFIGURACIÓN GENERAL Y PRECIOS -->
-      <section class="admin-section">
-        <h3>💰 Precios y Configuración</h3>
-        <form id="config-form">
-          <div class="form-group">
-            <label for="cfg-unit-price">Precio Vianda Individual ($)</label>
-            <input type="number" id="cfg-unit-price" required />
-          </div>
-          <div class="form-group">
-            <label for="cfg-promo-price">Precio Promo Semanal c/u ($)</label>
-            <input type="number" id="cfg-promo-price" required />
-          </div>
-          <div class="form-group">
-            <label for="cfg-whatsapp">Número de WhatsApp (con código de país, sin +)</label>
-            <input type="text" id="cfg-whatsapp" required placeholder="59899123456" />
-          </div>
-          <button type="submit" class="btn-primary">Guardar Cambios</button>
-        </form>
-      </section>
+      <!-- NAVEGACIÓN INTERNA DEL PANEL -->
+      <nav class="dash-tabs" aria-label="Secciones del panel">
+        <button type="button" class="dash-tab active" data-tab="gestion">Gestión</button>
+        <button type="button" class="dash-tab" data-tab="estadisticas">Estadísticas</button>
+        <button type="button" class="dash-tab" data-tab="pedidos">Pedidos</button>
+        <button type="button" class="dash-tab" data-tab="clientes">Clientes</button>
+      </nav>
 
-      <!-- 2. GESTIÓN DE FOTOS Y GALERÍA -->
-      <section class="admin-section">
-        <h3>📸 Galería de Platos</h3>
-        <form id="upload-form">
-          <div class="form-group">
-            <label for="image-file">Seleccionar imagen del plato</label>
-            <input type="file" id="image-file" accept="image/*" required />
-          </div>
-          <div class="form-group">
-            <label for="image-title">Título / Descripción del plato</label>
-            <input type="text" id="image-title" required placeholder="Ej: Canelones gratinados" />
-          </div>
-          <button type="submit" class="btn-primary">Subir a la Web</button>
-        </form>
+      <!-- TAB 1: GESTIÓN (PRECIOS, GALERÍA, MENÚ) -->
+      <div id="tab-gestion" class="dash-panel active">
+        <section class="admin-section">
+          <h3>💰 Precios y Configuración</h3>
+          <form id="config-form">
+            <div class="form-group">
+              <label for="cfg-unit-price">Precio Vianda Individual ($)</label>
+              <input type="number" id="cfg-unit-price" required />
+            </div>
+            <div class="form-group">
+              <label for="cfg-promo-price">Precio Promo Semanal c/u ($)</label>
+              <input type="number" id="cfg-promo-price" required />
+            </div>
+            <div class="form-group">
+              <label for="cfg-whatsapp">Número de WhatsApp (con código de país, sin +)</label>
+              <input type="text" id="cfg-whatsapp" required placeholder="59899123456" />
+            </div>
+            <button type="submit" class="btn-primary">Guardar Cambios</button>
+          </form>
+        </section>
 
-        <div class="gallery-admin-wrapper">
-          <h4 class="sub-heading">Fotos activas en la web</h4>
-          <div id="admin-gallery-list" class="admin-gallery-list">
-            <!-- Miniaturas con botón eliminar -->
-          </div>
-        </div>
-      </section>
+        <section class="admin-section">
+          <h3>📸 Galería de Platos</h3>
+          <form id="upload-form">
+            <div class="form-group">
+              <label for="image-file">Seleccionar imagen del plato</label>
+              <input type="file" id="image-file" accept="image/*" required />
+            </div>
+            <div class="form-group">
+              <label for="image-title">Título / Descripción del plato</label>
+              <input type="text" id="image-title" required placeholder="Ej: Canelones gratinados" />
+            </div>
+            <button type="submit" class="btn-primary">Subir a la Web</button>
+          </form>
 
-      <!-- 3. MENÚ SEMANAL -->
-      <section class="admin-section">
-        <h3>🍽️ Editar Menú Semanal</h3>
-        <div class="form-group">
-          <label for="select-day">Seleccionar Día</label>
-          <select id="select-day">
-            <option value="Lunes">Lunes</option>
-            <option value="Martes">Martes</option>
-            <option value="Miércoles">Miércoles</option>
-            <option value="Jueves">Jueves</option>
-            <option value="Viernes">Viernes</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="day-dishes-input">Platos del día (un plato por renglón; borrá un renglón para quitarlo)</label>
-          <textarea id="day-dishes-input" rows="5" placeholder="Plato 1&#10;Plato 2&#10;Plato 3"></textarea>
-        </div>
-        <div class="menu-btn-group">
-          <button type="button" id="save-menu-btn" class="btn-primary">Guardar Menú del Día</button>
-          <button type="button" id="clear-day-btn" class="btn-danger-outline">Vaciar este día</button>
-        </div>
-      </section>
+          <div class="gallery-admin-wrapper">
+            <h4 class="sub-heading">Fotos activas en la web</h4>
+            <div id="admin-gallery-list" class="admin-gallery-list"></div>
+          </div>
+        </section>
+
+        <section class="admin-section">
+          <h3>🍽️ Editar Menú Semanal</h3>
+          <div class="form-group">
+            <label for="select-day">Seleccionar Día</label>
+            <select id="select-day">
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="day-dishes-input">Platos del día (un plato por renglón; borrá un renglón para quitarlo)</label>
+            <textarea id="day-dishes-input" rows="5" placeholder="Plato 1&#10;Plato 2&#10;Plato 3"></textarea>
+          </div>
+          <div class="menu-btn-group">
+            <button type="button" id="save-menu-btn" class="btn-primary">Guardar Menú del Día</button>
+            <button type="button" id="clear-day-btn" class="btn-danger-outline">Vaciar este día</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 2: ESTADÍSTICAS -->
+      <div id="tab-estadisticas" class="dash-panel hidden">
+        <section class="admin-section">
+          <div class="section-top-row">
+            <h3>📊 Estadísticas (Confirmados)</h3>
+            <select id="stats-period" class="compact-select">
+              <option value="all">Todo el historial</option>
+              <option value="today">Hoy</option>
+              <option value="week">Últimos 7 días</option>
+              <option value="month">Este mes</option>
+            </select>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box highlight">
+              <span class="stat-label">Plata que entró</span>
+              <strong id="stat-revenue" class="stat-value">$0</strong>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Viandas vendidas</span>
+              <strong id="stat-viandas" class="stat-value">0</strong>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Pedidos confirmados</span>
+              <strong id="stat-orders-count" class="stat-value">0</strong>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Ticket promedio</span>
+              <strong id="stat-avg-ticket" class="stat-value">$0</strong>
+            </div>
+          </div>
+
+          <div class="payment-breakdown">
+            <h4 class="sub-heading">Ingresos por medio de pago</h4>
+            <div class="breakdown-row">
+              <span>Transferencia bancaria</span>
+              <strong id="stat-transfer">$0</strong>
+            </div>
+            <div class="breakdown-row">
+              <span>Mercado Pago</span>
+              <strong id="stat-mp">$0</strong>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- TAB 3: HISTORIAL DE PEDIDOS -->
+      <div id="tab-pedidos" class="dash-panel hidden">
+        <section class="admin-section">
+          <div class="section-top-row">
+            <h3>🧾 Historial de Pedidos</h3>
+            <select id="filter-order-status" class="compact-select">
+              <option value="all">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="confirmado">Confirmados</option>
+              <option value="cancelado">Cancelados</option>
+            </select>
+          </div>
+          <div id="orders-list" class="orders-list"></div>
+        </section>
+      </div>
+
+      <!-- TAB 4: BASE DE CLIENTES -->
+      <div id="tab-clientes" class="dash-panel hidden">
+        <section class="admin-section">
+          <h3>👥 Base de Clientes</h3>
+          <div class="form-group">
+            <input type="search" id="search-customer" placeholder="Buscar por nombre o teléfono..." />
+          </div>
+          <div id="customers-list" class="customers-list"></div>
+        </section>
+      </div>
     </main>
   </div>
 

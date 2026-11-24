@@ -187,14 +187,28 @@
       <!-- Mensaje dinámico sobre cuánto falta para la promo de 5 viandas -->
     </div>
 
+    <div id="order-confirmation" class="order-confirmation hidden" role="status" aria-live="polite">
+      <div class="confirmation-icon">✓</div>
+      <div class="confirmation-body">
+        <strong>¡Pedido registrado correctamente!</strong>
+        <p id="confirmation-detail">Ya guardamos tu pedido y abrimos WhatsApp para coordinar la entrega.</p>
+      </div>
+      <button type="button" id="close-confirmation-btn" class="confirmation-dismiss"
+        aria-label="Cerrar aviso">✕</button>
+    </div>
+
     <div id="cart-items" class="cart-items">
       <!-- Ítems agregados -->
     </div>
 
     <div class="drawer-footer">
       <div class="form-group">
-        <label for="customer-name">Tu nombre</label>
-        <input type="text" id="customer-name" placeholder="Ej: Lucía Fernández" />
+        <label for="customer-name">Tu nombre *</label>
+        <input type="text" id="customer-name" required placeholder="Ej: Lucía Fernández" />
+      </div>
+      <div class="form-group">
+        <label for="customer-phone">Tu teléfono / WhatsApp *</label>
+        <input type="tel" id="customer-phone" required placeholder="Ej: 099 123 456" />
       </div>
       <div class="form-group">
         <label for="customer-address">Dirección de entrega (opcional o la escribís en WhatsApp)</label>

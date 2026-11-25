@@ -485,3 +485,42 @@ p {
   font-size: 0.76rem;
   font-weight: 700;
 }
+
+.faq-admin-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.faq-admin-q {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.faq-admin-a {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+.faq-admin-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-edit-item {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}

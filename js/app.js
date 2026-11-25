@@ -12,12 +12,54 @@ import {
 const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const DELIVERY_CUTOFF_HOUR = 14; // Después de las 14:00 hs se prioriza el próximo día hábil
 
+const DEFAULT_FAQS = [
+  {
+    question: "¿Qué tipo de viandas ofrecen?",
+    answer: "Ofrecemos comidas caseras, equilibradas y elaboradas con ingredientes seleccionados, pensadas para facilitar una alimentación saludable durante la semana."
+  },
+  {
+    question: "¿Cómo hago mi pedido?",
+    answer: "Podés realizar tu pedido directamente por WhatsApp, desde el botón disponible en nuestra página web."
+  },
+  {
+    question: "¿Hacen entregas a domicilio?",
+    answer: "Sí, realizamos entregas en Montevideo. En horario de 10:30 hs a 14:00 hs."
+  },
+  {
+    question: "¿Qué días realizan entregas?",
+    answer: "Las entregas se realizan de lunes a viernes dentro del horario establecido."
+  },
+  {
+    question: "¿Con cuánto tiempo de anticipación tengo que pedir?",
+    answer: "Lo ideal es realizar tu pedido el día anterior para asegurar la entrega. También aceptamos pedidos hasta las 09:00 del mismo día, sujetos a disponibilidad y al cronograma de entregas confirmado el día anterior."
+  },
+  {
+    question: "¿Puedo hacer un pedido para varios días?",
+    answer: "Sí. Podés realizar pedidos para organizar tus comidas de varios días y consultar por las opciones disponibles."
+  },
+  {
+    question: "¿Cómo puedo pagar?",
+    answer: "Podés pagar por intermedio de transferencia o efectivo."
+  },
+  {
+    question: "¿Pueden preparar menús personalizados?",
+    answer: "Sí, escribinos al WhatsApp y te contamos."
+  },
+  {
+    question: "¿Por qué elegir nuestras viandas?",
+    answer: "Porque buscamos ofrecer una solución práctica para comer rico y equilibrado, sin tener que dedicar tiempo todos los días a cocinar."
+  }
+];
+
 // Estado inicial con los datos reales proporcionados por la clienta
 let appData = {
   whatsappNumber: "59899000000", // Cambiar por el número real sin el +
   unitPrice: 360,
   promoPrice: 320,
   promoMinQty: 5,
+  paymentMethods: ["Transferencia bancaria", "Efectivo"],
+  bankDetails: "",
+  faqs: [...DEFAULT_FAQS],
   scheduleText: "Pedidos el día anterior o hasta las 09:00 hs del mismo día (sujeto a disponibilidad).",
   deliveryZones: "Entregas en Montevideo de Lunes a Viernes de 10:30 a 14:00 hs.",
   gallery: [
@@ -129,7 +171,10 @@ async function loadFromFirebase() {
     const docRef = doc(db, "config", "storeData");
     const snap = await getDoc(docRef);
     if (snap.exists()) {
-      appData = { ...appData, ...snap.data() };
+      appData = {
+        ...appData,
+        ...snap.data()
+      };
     }
   } catch (error) {
     console.warn("Usando datos locales por defecto:", error.message);
@@ -143,8 +188,39 @@ function renderUI() {
   document.getElementById("schedule-info").textContent = appData.scheduleText;
   document.getElementById("delivery-zones").textContent = appData.deliveryZones;
 
+  renderPaymentMethods();
+  renderFaqs();
   renderGallery();
   renderMenu(activeDay);
+}
+
+function renderPaymentMethods() {
+  const selectEl = document.getElementById("payment-method");
+  if (!selectEl) return;
+
+  const methods = Array.isArray(appData.paymentMethods) && appData.paymentMethods.length > 0
+    ? appData.paymentMethods
+    : ["Transferencia bancaria", "Efectivo"];
+
+  selectEl.innerHTML = methods
+    .map(method => `<option value="${method}">${method}</option>`)
+    .join("");
+}
+
+function renderFaqs() {
+  const faqListEl = document.querySelector("#faq .faq-list");
+  if (!faqListEl) return;
+
+  const faqsToRender = Array.isArray(appData.faqs) && appData.faqs.length > 0
+    ? appData.faqs
+    : DEFAULT_FAQS;
+
+  faqListEl.innerHTML = faqsToRender.map(item => `
+    <details class="faq-item">
+      <summary>${item.question}</summary>
+      <p>${item.answer}</p>
+    </details>
+  `).join("");
 }
 
 function renderGallery() {
@@ -322,10 +398,10 @@ function hideOrderConfirmation() {
 
 // Registrar pedido y actualizar base de clientes en Firestore
 async function saveOrderAndCustomer({ customerName, rawPhone, cleanPhone, address, notes, paymentMethod, totalQty, unitPrice, totalAmount, isPromo }) {
-  await addDoc(collection(db, "orders"), {
+  const orderDoc = await addDoc(collection(db, "orders"), {
     customerName,
     customerPhone: rawPhone,
-    customerId: cleanPhone,
+    customerId: cleanPhone || rawPhone,
     address: address || "",
     notes: notes || "",
     paymentMethod,
@@ -343,8 +419,9 @@ async function saveOrderAndCustomer({ customerName, rawPhone, cleanPhone, addres
     createdAt: serverTimestamp()
   });
 
-  if (cleanPhone) {
-    const customerRef = doc(db, "customers", cleanPhone);
+  const customerDocId = cleanPhone || rawPhone.replace(/\s+/g, "");
+  if (customerDocId) {
+    const customerRef = doc(db, "customers", customerDocId);
     const customerSnap = await getDoc(customerRef);
 
     if (customerSnap.exists()) {
@@ -367,11 +444,14 @@ async function saveOrderAndCustomer({ customerName, rawPhone, cleanPhone, addres
         ordersCount: 1,
         totalViandas: totalQty,
         totalEstimatedSpent: totalAmount,
+        totalConfirmedSpent: 0,
         createdAt: serverTimestamp(),
         lastOrderAt: serverTimestamp()
       });
     }
   }
+
+  return orderDoc.id;
 }
 
 // Enviar pedido formateado a WhatsApp
@@ -416,6 +496,10 @@ async function sendWhatsAppOrder() {
   message += `\n*Total estimado:* $${totalAmount}`;
   message += `\n💳 *Forma de pago:* ${paymentMethod}`;
 
+  if (paymentMethod.toLowerCase().includes("transferencia") && appData.bankDetails) {
+    message += `\n🏦 *Datos de cuenta:*\n${appData.bankDetails}`;
+  }
+
   if (address) message += `\n\n📍 *Dirección:* ${address}`;
   else message += `\n\n📍 *Dirección:* (Escribo mi dirección acá)`;
 
@@ -437,11 +521,15 @@ async function sendWhatsAppOrder() {
     resetOrderFormAndCart();
     showOrderConfirmation(customerName, totalAmount);
   } catch (err) {
-    console.warn("No se pudo guardar el pedido en Firestore:", err.message);
-  } finally {
+    console.error("Error al guardar en Firestore:", err);
+    alert("Hubo un problema al guardar el pedido en el sistema. Revisá tu conexión e intentá de nuevo.");
     sendBtn.disabled = false;
     sendBtn.textContent = "Confirmar por WhatsApp";
+    return;
   }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = "Confirmar por WhatsApp";
 
   const encoded = encodeURIComponent(message);
   window.open(`https://wa.me/${appData.whatsappNumber}?text=${encoded}`, "_blank");

@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Al Punto | Panel de Administración</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="css/admin.css" />
 </head>
+
 <body>
 
   <!-- LOGIN SCREEN -->
@@ -115,6 +118,41 @@
             <button type="button" id="clear-day-btn" class="btn-danger-outline">Vaciar este día</button>
           </div>
         </section>
+        <section class="admin-section">
+          <h3>💳 Formas de Pago y Datos de Cuenta</h3>
+          <form id="payments-form">
+            <div class="form-group">
+              <label for="cfg-payment-methods">Formas de pago habilitadas (una por renglón)</label>
+              <textarea id="cfg-payment-methods" rows="3" placeholder="Transferencia bancaria&#10;Efectivo"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="cfg-bank-details">Números de cuenta / Datos para transferencia</label>
+              <textarea id="cfg-bank-details" rows="4"
+                placeholder="Ej: BROU Caja de Ahorros en pesos: 001-1234567-00001&#10;Titular: ..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary">Guardar Formas de Pago</button>
+          </form>
+        </section>
+
+        <section class="admin-section">
+          <h3>❓ Preguntas Frecuentes</h3>
+          <form id="faq-form">
+            <div class="form-group">
+              <label for="faq-question">Pregunta</label>
+              <input type="text" id="faq-question" required placeholder="Ej: ¿Con cuánto tiempo debo pedir?" />
+            </div>
+            <div class="form-group">
+              <label for="faq-answer">Respuesta</label>
+              <textarea id="faq-answer" rows="3" required placeholder="Escribí la respuesta..."></textarea>
+            </div>
+            <button type="submit" id="faq-submit-btn" class="btn-primary">Agregar Pregunta</button>
+          </form>
+
+          <div class="gallery-admin-wrapper">
+            <h4 class="sub-heading">Preguntas activas en la web</h4>
+            <div id="admin-faq-list" class="admin-gallery-list"></div>
+          </div>
+        </section>
       </div>
 
       <!-- TAB 2: ESTADÍSTICAS -->
@@ -194,4 +232,5 @@
 
   <script type="module" src="js/admin.js"></script>
 </body>
+
 </html>

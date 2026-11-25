@@ -12,15 +12,55 @@ import {
   deleteDoc,
   collection,
   getDocs,
-  query,
-  orderBy,
   increment
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const DEFAULT_FAQS = [
+  {
+    question: "¿Qué tipo de viandas ofrecen?",
+    answer: "Ofrecemos comidas caseras, equilibradas y elaboradas con ingredientes seleccionados, pensadas para facilitar una alimentación saludable durante la semana."
+  },
+  {
+    question: "¿Cómo hago mi pedido?",
+    answer: "Podés realizar tu pedido directamente por WhatsApp, desde el botón disponible en nuestra página web."
+  },
+  {
+    question: "¿Hacen entregas a domicilio?",
+    answer: "Sí, realizamos entregas en Montevideo. En horario de 10:30 hs a 14:00 hs."
+  },
+  {
+    question: "¿Qué días realizan entregas?",
+    answer: "Las entregas se realizan de lunes a viernes dentro del horario establecido."
+  },
+  {
+    question: "¿Con cuánto tiempo de anticipación tengo que pedir?",
+    answer: "Lo ideal es realizar tu pedido el día anterior para asegurar la entrega. También aceptamos pedidos hasta las 09:00 del mismo día, sujetos a disponibilidad y al cronograma de entregas confirmado el día anterior."
+  },
+  {
+    question: "¿Puedo hacer un pedido para varios días?",
+    answer: "Sí. Podés realizar pedidos para organizar tus comidas de varios días y consultar por las opciones disponibles."
+  },
+  {
+    question: "¿Cómo puedo pagar?",
+    answer: "Podés pagar por intermedio de transferencia o efectivo."
+  },
+  {
+    question: "¿Pueden preparar menús personalizados?",
+    answer: "Sí, escribinos al WhatsApp y te contamos."
+  },
+  {
+    question: "¿Por qué elegir nuestras viandas?",
+    answer: "Porque buscamos ofrecer una solución práctica para comer rico y equilibrado, sin tener que dedicar tiempo todos los días a cocinar."
+  }
+];
 
 let currentData = {
   unitPrice: 360,
   promoPrice: 320,
   whatsappNumber: "59899000000",
+  paymentMethods: ["Transferencia bancaria", "Efectivo"],
+  bankDetails: "",
+  faqs: [...DEFAULT_FAQS],
   gallery: [],
   menu: {
     Lunes: ["Pollo grillado con papas al horno"],
@@ -33,6 +73,7 @@ let currentData = {
 
 let allOrders = [];
 let allCustomers = [];
+let editingFaqIndex = null;
 
 // Control de sesión
 onAuthStateChanged(auth, async (user) => {
@@ -82,9 +123,21 @@ async function loadAdminData() {
     const snap = await getDoc(docRef);
 
     if (snap.exists()) {
-      currentData = snap.data();
+      currentData = {
+        ...currentData,
+        ...snap.data()
+      };
       if (!currentData.menu) currentData.menu = {};
       if (!currentData.gallery) currentData.gallery = [];
+      if (!Array.isArray(currentData.paymentMethods) || currentData.paymentMethods.length === 0) {
+        currentData.paymentMethods = ["Transferencia bancaria", "Efectivo"];
+      }
+      if (typeof currentData.bankDetails !== "string") {
+        currentData.bankDetails = "";
+      }
+      if (!Array.isArray(currentData.faqs)) {
+        currentData.faqs = [...DEFAULT_FAQS];
+      }
     } else {
       await setDoc(docRef, currentData);
     }
@@ -92,9 +145,12 @@ async function loadAdminData() {
     document.getElementById("cfg-unit-price").value = currentData.unitPrice || 360;
     document.getElementById("cfg-promo-price").value = currentData.promoPrice || 320;
     document.getElementById("cfg-whatsapp").value = currentData.whatsappNumber || "";
+    document.getElementById("cfg-payment-methods").value = currentData.paymentMethods.join("\n");
+    document.getElementById("cfg-bank-details").value = currentData.bankDetails || "";
 
     renderAdminGallery();
     populateMenuEditor();
+    renderAdminFaqs();
   } catch (err) {
     console.error("Error al cargar datos de admin:", err);
   }
@@ -103,8 +159,14 @@ async function loadAdminData() {
 // Cargar pedidos y clientes desde Firestore
 async function loadOrdersAndCustomers() {
   try {
-    const ordersSnap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
-    allOrders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const ordersSnap = await getDocs(collection(db, "orders"));
+    allOrders = ordersSnap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const da = getOrderDate(a)?.getTime() || 0;
+        const dbTime = getOrderDate(b)?.getTime() || 0;
+        return dbTime - da;
+      });
 
     const customersSnap = await getDocs(collection(db, "customers"));
     allCustomers = customersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -197,7 +259,7 @@ function renderOrders() {
     const dateLabel = dt ? dt.toLocaleString("es-UY", { dateStyle: "short", timeStyle: "short" }) : "Recién registrado";
     const status = order.status || "pendiente";
     const itemsHtml = (order.items || [])
-      .map(it => `<li>• ${it.qty}x ${it.name} (${it.day})</li>`)
+      .map(it => `<li>• ${it.qty}x ${it.name} (${it.deliveryLabel || it.day})</li>`)
       .join("");
 
     return `
@@ -357,6 +419,23 @@ document.getElementById("config-form").addEventListener("submit", async (e) => {
   alert("¡Precios y configuración actualizados con éxito!");
 });
 
+// Guardar Formas de Pago y Datos de Cuenta
+document.getElementById("payments-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentData) return;
+
+  const rawMethods = document.getElementById("cfg-payment-methods").value
+    .split("\n")
+    .map(m => m.trim())
+    .filter(m => m.length > 0);
+
+  currentData.paymentMethods = rawMethods.length > 0 ? rawMethods : ["Transferencia bancaria", "Efectivo"];
+  currentData.bankDetails = document.getElementById("cfg-bank-details").value.trim();
+
+  await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+  alert("¡Formas de pago y datos de cuenta guardados con éxito!");
+});
+
 // Procesar imagen y guardarla comprimida en Firestore
 document.getElementById("upload-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -369,9 +448,9 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = function(event) {
+  reader.onload = function (event) {
     const img = new Image();
-    img.onload = async function() {
+    img.onload = async function () {
       const canvas = document.createElement("canvas");
       const MAX_WIDTH = 800;
       const scaleSize = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
@@ -434,4 +513,82 @@ document.getElementById("clear-day-btn").addEventListener("click", async () => {
 
   await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
   alert(`Se vació el menú del día ${day}.`);
+});
+
+// Renderizar Preguntas Frecuentes en el panel
+function renderAdminFaqs() {
+  const listEl = document.getElementById("admin-faq-list");
+  if (!currentData.faqs || currentData.faqs.length === 0) {
+    listEl.innerHTML = `<p class="empty-gallery-msg">No hay preguntas frecuentes cargadas.</p>`;
+    return;
+  }
+
+  listEl.innerHTML = currentData.faqs.map((item, index) => `
+    <div class="faq-admin-item">
+      <div class="faq-admin-q">${item.question}</div>
+      <p class="faq-admin-a">${item.answer}</p>
+      <div class="faq-admin-actions">
+        <button type="button" class="btn-edit-item" data-faq-edit="${index}">Editar</button>
+        <button type="button" class="btn-delete-photo" data-faq-delete="${index}">Eliminar</button>
+      </div>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll("[data-faq-edit]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.faqEdit);
+      const item = currentData.faqs[idx];
+      if (!item) return;
+      editingFaqIndex = idx;
+      document.getElementById("faq-question").value = item.question;
+      document.getElementById("faq-answer").value = item.answer;
+      document.getElementById("faq-submit-btn").textContent = "Guardar Cambios de Pregunta";
+      document.getElementById("faq-question").focus();
+    });
+  });
+
+  listEl.querySelectorAll("[data-faq-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const idx = Number(btn.dataset.faqDelete);
+      const item = currentData.faqs[idx];
+      if (!item) return;
+
+      const confirmed = confirm(`¿Eliminar la pregunta "${item.question}"?`);
+      if (!confirmed) return;
+
+      currentData.faqs.splice(idx, 1);
+      if (editingFaqIndex === idx) {
+        editingFaqIndex = null;
+        document.getElementById("faq-form").reset();
+        document.getElementById("faq-submit-btn").textContent = "Agregar Pregunta";
+      }
+      await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+      renderAdminFaqs();
+    });
+  });
+}
+
+// Agregar o editar pregunta frecuente
+document.getElementById("faq-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentData) return;
+
+  const question = document.getElementById("faq-question").value.trim();
+  const answer = document.getElementById("faq-answer").value.trim();
+  if (!question || !answer) return;
+
+  if (!Array.isArray(currentData.faqs)) currentData.faqs = [];
+
+  if (editingFaqIndex !== null && currentData.faqs[editingFaqIndex]) {
+    currentData.faqs[editingFaqIndex] = { question, answer };
+    editingFaqIndex = null;
+    document.getElementById("faq-submit-btn").textContent = "Agregar Pregunta";
+  } else {
+    currentData.faqs.push({ question, answer });
+  }
+
+  await setDoc(doc(db, "config", "storeData"), currentData, { merge: true });
+  document.getElementById("faq-form").reset();
+  renderAdminFaqs();
+  alert("¡Preguntas frecuentes guardadas con éxito!");
 });

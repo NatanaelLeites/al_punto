@@ -421,33 +421,37 @@ async function saveOrderAndCustomer({ customerName, rawPhone, cleanPhone, addres
 
   const customerDocId = cleanPhone || rawPhone.replace(/\s+/g, "");
   if (customerDocId) {
-    const customerRef = doc(db, "customers", customerDocId);
-    const customerSnap = await getDoc(customerRef);
+    try {
+      const customerRef = doc(db, "customers", customerDocId);
+      const customerSnap = await getDoc(customerRef);
 
-    if (customerSnap.exists()) {
-      await setDoc(customerRef, {
-        name: customerName,
-        phone: rawPhone,
-        lastAddress: address || customerSnap.data().lastAddress || "",
-        lastPaymentMethod: paymentMethod,
-        ordersCount: increment(1),
-        totalViandas: increment(totalQty),
-        totalEstimatedSpent: increment(totalAmount),
-        lastOrderAt: serverTimestamp()
-      }, { merge: true });
-    } else {
-      await setDoc(customerRef, {
-        name: customerName,
-        phone: rawPhone,
-        lastAddress: address || "",
-        lastPaymentMethod: paymentMethod,
-        ordersCount: 1,
-        totalViandas: totalQty,
-        totalEstimatedSpent: totalAmount,
-        totalConfirmedSpent: 0,
-        createdAt: serverTimestamp(),
-        lastOrderAt: serverTimestamp()
-      });
+      if (customerSnap.exists()) {
+        await setDoc(customerRef, {
+          name: customerName,
+          phone: rawPhone,
+          lastAddress: address || customerSnap.data().lastAddress || "",
+          lastPaymentMethod: paymentMethod,
+          ordersCount: increment(1),
+          totalViandas: increment(totalQty),
+          totalEstimatedSpent: increment(totalAmount),
+          lastOrderAt: serverTimestamp()
+        }, { merge: true });
+      } else {
+        await setDoc(customerRef, {
+          name: customerName,
+          phone: rawPhone,
+          lastAddress: address || "",
+          lastPaymentMethod: paymentMethod,
+          ordersCount: 1,
+          totalViandas: totalQty,
+          totalEstimatedSpent: totalAmount,
+          totalConfirmedSpent: 0,
+          createdAt: serverTimestamp(),
+          lastOrderAt: serverTimestamp()
+        });
+      }
+    } catch (customerErr) {
+      console.warn("Pedido guardado, pero falló agendar en customers:", customerErr);
     }
   }
 
@@ -521,7 +525,7 @@ async function sendWhatsAppOrder() {
     resetOrderFormAndCart();
     showOrderConfirmation(customerName, totalAmount);
   } catch (err) {
-    console.error("Error al guardar en Firestore:", err);
+    console.error("Error al guardar el pedido en Firestore:", err);
     alert("Hubo un problema al guardar el pedido en el sistema. Revisá tu conexión e intentá de nuevo.");
     sendBtn.disabled = false;
     sendBtn.textContent = "Confirmar por WhatsApp";
